@@ -11,28 +11,29 @@ public class Menu {
     public void run() {
         while (true) {
             String input = scanner.nextLine().strip();
-            if ("exit".equals(input)) {
-                scanner.close();
-                return;
-            } else {
-                String[] parts = input.split("\\s+");
-                String command = parts[0];
-                String fileName = parts.length > 1 ? parts[1] : null;
-                switch (command) {
-                    case "add":
-                        addFile(fileName);
-                        break;
-                    case "get":
-                        getFile(fileName);
-                        break;
-                    case "delete":
-                        deleteFile(fileName);
-                        break;
-                    default:
-                        break;
-                }
+
+            String[] parts = input.split("\\s+");
+            String command = parts[0];
+            String fileName = parts.length > 1 ? parts[1] : null;
+
+            switch (command) {
+                case "add":
+                    addFile(fileName);
+                    break;
+                case "get":
+                    getFile(fileName);
+                    break;
+                case "delete":
+                    deleteFile(fileName);
+                    break;
+                case "exit":
+                    scanner.close();
+                    return;
+                default:
+                    break;
             }
         }
+
     }
 
     private void deleteFile(String fileName) {

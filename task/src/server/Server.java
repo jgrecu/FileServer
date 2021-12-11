@@ -34,6 +34,7 @@ public class Server {
                         fileContents = parts[2];
                     }
                     if (command == Commands.exit) {
+                        socket.close();
                         return;
                     }
                     //System.out.println("Received: " + receivedMsg);

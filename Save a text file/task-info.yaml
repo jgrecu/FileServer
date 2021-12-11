@@ -238,6 +238,155 @@ files:
     }
 
   learner_created: false
+- name: src/server/Menu.java
+  visible: true
+  text: |
+    package server;
+
+    import java.util.HashSet;
+    import java.util.Scanner;
+    import java.util.Set;
+
+    public class Menu {
+        private final Scanner scanner = new Scanner(System.in);
+        private final Set<String> storage = new HashSet<>();
+
+        public void run() {
+            while (true) {
+                String input = scanner.nextLine().strip();
+
+                String[] parts = input.split("\\s+");
+                String command = parts[0];
+                String fileName = parts.length > 1 ? parts[1] : null;
+
+                switch (command) {
+                    case "add":
+                        addFile(fileName);
+                        break;
+                    case "get":
+                        getFile(fileName);
+                        break;
+                    case "delete":
+                        deleteFile(fileName);
+                        break;
+                    case "exit":
+                        scanner.close();
+                        return;
+                    default:
+                        break;
+                }
+            }
+
+        }
+
+        private void deleteFile(String fileName) {
+            if (fileName != null && storage.remove(fileName)) {
+                System.out.println("The file " + fileName + " was deleted");
+            } else {
+                System.out.println("The file " + fileName + " not found");
+            }
+        }
+
+        private void getFile(String fileName) {
+            if (fileName != null && storage.contains(fileName)) {
+                System.out.println("The file " + fileName + " was sent");
+            } else {
+                System.out.println("The file " + fileName + " not found");
+            }
+        }
+
+        private void addFile(String fileName) {
+            if (fileName != null && fileName.matches("file[1-9]0?") && storage.add(fileName)) {
+                System.out.println("The file " + fileName + " added successfully");
+            } else {
+                System.out.println("Cannot add the file " + fileName);
+            }
+        }
+    }
+  learner_created: true
+- name: src/client/Client.java
+  visible: true
+  text: |
+    package client;
+
+    import java.io.DataInputStream;
+    import java.io.DataOutputStream;
+    import java.io.IOException;
+    import java.net.InetAddress;
+    import java.net.Socket;
+
+    public class Client {
+        private final String address = "127.0.0.1";
+        private final int port = 23456;
+
+        public void start() {
+            try (Socket socket = new Socket(InetAddress.getByName(address), port)
+            ) {
+                try (DataInputStream input = new DataInputStream(socket.getInputStream());
+                     DataOutputStream output = new DataOutputStream(socket.getOutputStream())) {
+                    System.out.println("Client started!");
+                    String stringText = "Give me everything you have!";
+                    output.writeUTF(stringText);
+                    System.out.println("Sent: " + stringText);
+                    String receivedMsg = input.readUTF();
+                    System.out.println("Received: " + receivedMsg);
+                }
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    }
+  learner_created: true
+- name: src/client/Main.java
+  visible: true
+  text: |
+    package client;
+
+    public class Main {
+        public static void main(String[] args) {
+            Client client = new Client();
+            client.start();
+        }
+    }
+  learner_created: true
+- name: src/server/Server.java
+  visible: true
+  text: |
+    package server;
+
+    import java.io.DataInputStream;
+    import java.io.DataOutputStream;
+    import java.io.IOException;
+    import java.net.InetAddress;
+    import java.net.ServerSocket;
+    import java.net.Socket;
+
+    public class Server {
+        private final String address = "127.0.0.1";
+        private final int port = 23456;
+
+        public void start() {
+            try (ServerSocket server = new ServerSocket(port, 50, InetAddress.getByName(address))
+            ) {
+                Socket socket = server.accept();
+                System.out.println("Server started!");
+                try (DataInputStream input = new DataInputStream(socket.getInputStream());
+                     DataOutputStream output = new DataOutputStream(socket.getOutputStream())) {
+                    String receivedMsg = input.readUTF();
+                    System.out.println("Received: " + receivedMsg);
+                    String sendMsg = "All files were sent!";
+                    output.writeUTF(sendMsg);
+                    System.out.println("Sent: " + sendMsg);
+                }
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    }
+  learner_created: true
+- name: src/server/Commands.java
+  visible: true
+  learner_created: true
 feedback_link: https://hyperskill.org/projects/52/stages/285/implement#comment
 status: Unchecked
 record: -1

@@ -8,6 +8,7 @@ public class Menu {
     private final Scanner scanner = new Scanner(System.in);
     private final Set<String> storage = new HashSet<>();
 
+
     public void run() {
         while (true) {
             String input = scanner.nextLine().strip();

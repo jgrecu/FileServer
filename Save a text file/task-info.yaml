@@ -387,9 +387,9 @@ files:
 - name: src/server/Commands.java
   visible: true
   learner_created: true
-feedback_link: https://hyperskill.org/projects/52/stages/285/implement#comment
+feedback_link: https://hyperskill.org/learn/step/5427#comment
 status: Solved
 feedback:
   message: Congratulations!
   time: Sat, 11 Dec 2021 13:06:42 UTC
-record: -1
+record: 3

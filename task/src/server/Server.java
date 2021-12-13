@@ -6,125 +6,123 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalTime;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Server {
+    private static final Path ROOT_PATH = Path.of(System.getProperty("user.dir"), "src", "server", "data");
+    protected static FileServer fileServer;
     private final String address = "127.0.0.1";
     private final int port = 23456;
-    private String fileName;
-    private String fileContents;
+    private ExecutorService executor;
+    private ServerSocket serverSocket;
 
+    private void initialize() {
+        fileServer = new FileServer(ROOT_PATH);
+        executor = Executors.newCachedThreadPool();
+    }
 
     public void start() {
-        try (ServerSocket server = new ServerSocket(port, 50, InetAddress.getByName(address))
-        ) {
+        initialize();
+
+        try {
+            serverSocket = new ServerSocket(port, 50, InetAddress.getByName(address));
             System.out.println("Server started!");
+
             while (true) {
-                Socket socket = server.accept();
-                try (DataInputStream input = new DataInputStream(socket.getInputStream());
-                     DataOutputStream output = new DataOutputStream(socket.getOutputStream())) {
-                    String receivedMsg = input.readUTF();
-                    String[] parts = receivedMsg.split("\\s+", 3);
-                    Commands command = Commands.valueOf(parts[0]);
-                    if (parts.length == 2) {
-                        fileName = parts[1];
-                    } else if (parts.length > 2) {
-                        fileName = parts[1];
-                        fileContents = parts[2];
-                    }
-                    if (command == Commands.exit) {
-                        socket.close();
-                        return;
-                    }
-                    //System.out.println("Received: " + receivedMsg);
-                    String responseCode = processFile(command);
-                    output.writeUTF(responseCode);
-                    //System.out.println("Sent: " + responseCode);
-                }
+                Socket socket = serverSocket.accept();
+                executor.submit(() -> handleClientRequest(socket));
             }
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
     }
 
-    private String processFile(Commands command) {
-        String response = "";
-        switch (command) {
-            case GET:
-                if (fileName == null) {
-                    return "404";
-                }
-                 response = get(fileName);
-                fileName = null;
-                fileContents = null;
-                return response;
-
-            case PUT:
-                if (fileName == null && fileContents == null) {
-                    return "403";
-                }
-                 response = put(fileName, fileContents);
-                fileName = null;
-                fileContents = null;
-                return response;
-            case DELETE:
-                if (fileName == null && fileContents == null) {
-                    return "404";
-                }
-                response = delete(fileName);
-                fileName = null;
-                fileContents = null;
-                return response;
+    private void stop() {
+        executor.shutdownNow();
+        fileServer.stop();
+        try {
+            serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        return "400";
+        System.exit(0);
     }
 
-    private String get(String fileName) {
-        Path root = Path.of(System.getProperty("user.dir"), "src", "server", "data", fileName);
-        //System.out.println(root);
-        if (Files.exists(root)) {
-            try {
-                fileContents = new String(Files.readAllBytes(root));
-                return "200 " + fileContents;
-            } catch (IOException e) {
-                return "404";
+    private void handleClientRequest(Socket socket) {
+        DataInputStream input = null;
+        DataOutputStream output = null;
+        try {
+            input = new DataInputStream(socket.getInputStream());
+            output = new DataOutputStream(socket.getOutputStream());
+
+            String received = input.readUTF();
+            System.out.println(LocalTime.now() + " - Received: " + received);
+            String[] parts = received.split("\\s+");
+            Commands command = Commands.valueOf(parts[0]);
+            Integer fileId = null;
+            String filename = "";
+            boolean byId = false;
+
+            if (command == Commands.GET || command == Commands.DELETE) {
+                String byNameOrId = parts[1];
+                byId = "BY_ID".equals(byNameOrId);
+                if (byId) {
+                    fileId = Integer.parseInt(parts[2]);
+                } else {
+                    filename = parts[2];
+                }
             }
 
-        } else {
-            return "404";
-        }
-    }
+            byte[] fileContentBinary = null;
+            String response = "";
 
-    private String put(String fileName, String fileContents) {
-        Path root = Path.of(System.getProperty("user.dir"), "src", "server", "data", fileName);
-        //System.out.println(root);
-        if (Files.notExists(root)) {
-            try {
-                Files.write(root, fileContents.getBytes());
-                return "200";
-            } catch (IOException e) {
-                return "403";
+            switch (command) {
+                case PUT:
+                    int size = input.readInt();
+                    fileContentBinary = new byte[size];
+                    input.readFully(fileContentBinary, 0, size);
+                    fileId = fileServer.put(filename, fileContentBinary);
+                    response = "" + (fileId > 0 ? "200" + " " + fileId : "403");
+                    break;
+                case GET:
+                    fileContentBinary = byId ? fileServer.get(fileId) : fileServer.get(filename);
+                    response = "" + (fileContentBinary == null ? "404" : "200");
+                    break;
+                case DELETE:
+                    boolean res = byId ? fileServer.delete(fileId) : fileServer.delete(filename);
+                    response = "" + (res ? "200" : "404");
+                    break;
+                case exit:
+                    stop();
+                    break;
+                default:
+                    break;
             }
 
-        } else {
-            return "403";
-        }
-    }
-
-    private String delete(String fileName) {
-        Path root = Path.of(System.getProperty("user.dir"), "src", "server", "data", fileName);
-        //System.out.println(root + " -> " + Files.exists(root));
-        if (Files.exists(root)) {
-            try {
-                Files.deleteIfExists(root);
-                return "200";
-            } catch (IOException e) {
-                return "404";
+            output.writeUTF(response);
+            if (command == Commands.GET && fileContentBinary != null) {
+                output.writeInt(fileContentBinary.length);
+                output.write(fileContentBinary);
             }
-        } else {
-            return "404";
+            System.out.println(LocalTime.now() + " - Sent: " + response);
+
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            try {
+                if (output != null) {
+                    output.close();
+                }
+                if (input != null) {
+                    input.close();
+                }
+                socket.close();
+            } catch (IOException e) {
+                System.out.println(e.getMessage());;
+            }
         }
     }
-
 }

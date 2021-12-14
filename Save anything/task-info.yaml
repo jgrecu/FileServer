@@ -296,73 +296,6 @@ files:
 
 
   learner_created: false
-- name: src/server/Menu.java
-  visible: true
-  text: |
-    package server;
-
-    import java.util.HashSet;
-    import java.util.Scanner;
-    import java.util.Set;
-
-    public class Menu {
-        private final Scanner scanner = new Scanner(System.in);
-        private final Set<String> storage = new HashSet<>();
-
-
-        public void run() {
-            while (true) {
-                String input = scanner.nextLine().strip();
-
-                String[] parts = input.split("\\s+");
-                String command = parts[0];
-                String fileName = parts.length > 1 ? parts[1] : null;
-
-                switch (command) {
-                    case "add":
-                        addFile(fileName);
-                        break;
-                    case "get":
-                        getFile(fileName);
-                        break;
-                    case "delete":
-                        deleteFile(fileName);
-                        break;
-                    case "exit":
-                        scanner.close();
-                        return;
-                    default:
-                        break;
-                }
-            }
-
-        }
-
-        private void deleteFile(String fileName) {
-            if (fileName != null && storage.remove(fileName)) {
-                System.out.println("The file " + fileName + " was deleted");
-            } else {
-                System.out.println("The file " + fileName + " not found");
-            }
-        }
-
-        private void getFile(String fileName) {
-            if (fileName != null && storage.contains(fileName)) {
-                System.out.println("The file " + fileName + " was sent");
-            } else {
-                System.out.println("The file " + fileName + " not found");
-            }
-        }
-
-        private void addFile(String fileName) {
-            if (fileName != null && fileName.matches("file[1-9]0?") && storage.add(fileName)) {
-                System.out.println("The file " + fileName + " added successfully");
-            } else {
-                System.out.println("Cannot add the file " + fileName);
-            }
-        }
-    }
-  learner_created: true
 - name: src/client/Client.java
   visible: true
   text: |
@@ -746,9 +679,13 @@ files:
 - name: src/server/FileServer.java
   visible: true
   learner_created: true
-- name: src/server/SerializationUtils.java
+- name: src/server/db/_FileServerData.ser
   visible: true
   learner_created: true
 feedback_link: https://hyperskill.org/learn/step/5428#comment
-status: Unchecked
+status: Solved
+feedback:
+  message: Well done! You've finished the project. Select a new project on <a href="https://hyperskill.org/projects">JetBrains
+    Academy</a> to continue learning.
+  time: Tue, 14 Dec 2021 18:42:59 UTC
 record: -1

@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class FileServer {
     private static final String DATA_FILENAME = "_FileServerData.ser";
     private final Path rootDir;
+    private static final Path dbDir = Path.of(System.getProperty("user.dir"), "src", "server", "db");
     private ConcurrentMap<String, Integer> fileToIdMap;
     private ConcurrentMap<Integer, String> idToFileMap;
     private AtomicInteger nextID;
@@ -26,7 +27,7 @@ public class FileServer {
     }
 
     private synchronized void initializeFilesMap() {
-        Path dataFile = rootDir.resolve(DATA_FILENAME);
+        Path dataFile = dbDir.resolve(DATA_FILENAME);
         if (!Files.exists(dataFile)) {
             nextID = new AtomicInteger(1);
             fileToIdMap = new ConcurrentHashMap<>();
@@ -46,7 +47,7 @@ public class FileServer {
     }
 
     void stop() {
-        Path dataFile = rootDir.resolve(DATA_FILENAME);
+        Path dataFile = dbDir.resolve(DATA_FILENAME);
 
         try (   OutputStream outputStream = Files.newOutputStream(dataFile);
                 ObjectOutput objectOutput = new ObjectOutputStream(outputStream);

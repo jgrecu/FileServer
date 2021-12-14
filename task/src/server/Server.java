@@ -7,7 +7,6 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
-import java.time.LocalTime;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -59,12 +58,16 @@ public class Server {
             output = new DataOutputStream(socket.getOutputStream());
 
             String received = input.readUTF();
-            System.out.println(LocalTime.now() + " - Received: " + received);
+            //System.out.println(LocalTime.now() + " - Received: " + received);
             String[] parts = received.split("\\s+");
             Commands command = Commands.valueOf(parts[0]);
             Integer fileId = null;
             String filename = "";
             boolean byId = false;
+
+            if (command == Commands.PUT && parts.length > 1) {
+                filename = parts[1];
+            }
 
             if (command == Commands.GET || command == Commands.DELETE) {
                 String byNameOrId = parts[1];
@@ -107,7 +110,7 @@ public class Server {
                 output.writeInt(fileContentBinary.length);
                 output.write(fileContentBinary);
             }
-            System.out.println(LocalTime.now() + " - Sent: " + response);
+            //System.out.println(LocalTime.now() + " - Sent: " + response);
 
         } catch (IOException e) {
             System.out.println(e.getMessage());

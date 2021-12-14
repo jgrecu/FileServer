@@ -15,6 +15,11 @@ public class Client {
             "src" + File.separator + "client" + File.separator + "data" + File.separator;
 
     public void start() {
+        try {
+            Thread.sleep(1500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         try (Socket socket = new Socket(InetAddress.getByName(address), port)
         ) {
             try (DataInputStream input = new DataInputStream(socket.getInputStream());
@@ -93,7 +98,7 @@ public class Client {
         System.out.println("The request was sent.");
         String[] response = dataInputStream.readUTF().split("\\s+");
         if ("200".equals(response[0])) {
-            System.out.println("The response says that the file is saved! ID = " + response[1]);
+            System.out.println("Response says that file is saved! ID = " + response[1]);
         } else {
             System.out.println("The response says that creating the file was forbidden!");
         }
@@ -117,7 +122,7 @@ public class Client {
         if ("200".equals(response)) {
             System.out.println("The response says that the file was successfully deleted!");
         } else {
-            System.out.println("The response says that the file was not found!");
+            System.out.println("Response says that the file was not found!");
         }
     }
 }

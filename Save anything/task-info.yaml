@@ -743,10 +743,10 @@ files:
 
 
   learner_created: false
-- name: src/server/ClientHandler.java
+- name: src/server/FileServer.java
   visible: true
   learner_created: true
-- name: src/server/FileServer.java
+- name: src/server/SerializationUtils.java
   visible: true
   learner_created: true
 feedback_link: https://hyperskill.org/learn/step/5428#comment
